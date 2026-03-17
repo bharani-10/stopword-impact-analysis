@@ -16,112 +16,101 @@ nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
 
 # -----------------------------
-# Load models
+# Load models (DEPLOYMENT SAFE)
 # -----------------------------
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
-model_with = joblib.load(os.path.join(BASE_DIR,"models","model_with_stopwords.pkl"))
-model_without = joblib.load(os.path.join(BASE_DIR,"models","model_without_stopwords.pkl"))
+model_with = joblib.load(os.path.join(BASE_DIR, "models", "model_with_stopwords.pkl"))
+model_without = joblib.load(os.path.join(BASE_DIR, "models", "model_without_stopwords.pkl"))
 
-vectorizer_with = joblib.load(os.path.join(BASE_DIR,"models","vectorizer_with.pkl"))
-vectorizer_without = joblib.load(os.path.join(BASE_DIR,"models","vectorizer_without.pkl"))
+vectorizer_with = joblib.load(os.path.join(BASE_DIR, "models", "vectorizer_with.pkl"))
+vectorizer_without = joblib.load(os.path.join(BASE_DIR, "models", "vectorizer_without.pkl"))
 
 # -----------------------------
 # Functions
 # -----------------------------
 
 def tokenize_text(text):
-    tokens = word_tokenize(text)
-    return tokens
+    return word_tokenize(text)
 
 def remove_stopwords(text):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
     tokens = word_tokenize(text)
-    filtered = [word for word in tokens if word not in stop_words]
-    return filtered
+    return [word for word in tokens if word not in stop_words]
 
 def predict_with_stopwords(text):
-
     vec = vectorizer_with.transform([text])
     pred = model_with.predict(vec)
 
     if pred[0] == 1:
-        label = "Spam"
-        reason = "Message contains promotional or suspicious keywords."
+        return "Spam", "Message contains promotional or suspicious keywords."
     else:
-        label = "Ham"
-        reason = "Message appears normal and conversational."
-
-    return label, reason
+        return "Ham", "Message appears normal and conversational."
 
 def predict_without_stopwords(text):
-
     vec = vectorizer_without.transform([text])
     pred = model_without.predict(vec)
 
     if pred[0] == 1:
-        label = "Spam"
-        reason = "Important spam keywords remain even after removing stopwords."
+        return "Spam", "Important spam keywords remain even after removing stopwords."
     else:
-        label = "Ham"
-        reason = "Remaining keywords indicate normal communication."
-
-    return label, reason
-
+        return "Ham", "Remaining keywords indicate normal communication."
 
 # -----------------------------
-# Streamlit UI
+# UI
 # -----------------------------
 
-st.title("Stopword Removal Impact Analysis")
+st.set_page_config(page_title="Stopword Analysis", layout="centered")
 
-st.write("This app demonstrates how stopword removal affects NLP predictions.")
+st.title("📩 Stopword Removal Impact Analysis")
+st.write("Compare predictions with and without stopwords.")
 
-user_text = st.text_area("Enter a message")
+user_text = st.text_area("Enter your message here")
 
 if st.button("Analyze Text"):
 
     if user_text.strip() == "":
-        st.warning("Please enter a message")
-    
+        st.warning("⚠ Please enter a message")
     else:
 
-        # Original text
-        st.header("Original Text")
+        # -----------------------------
+        # ORIGINAL TEXT
+        # -----------------------------
+        st.header("📌 Original Text")
         st.write(user_text)
 
         # -----------------------------
         # WITH STOPWORDS
         # -----------------------------
-        st.header("WITH STOPWORDS")
+        st.header("🔹 With Stopwords")
 
         text_with = user_text.lower()
+        tokens_with = tokenize_text(text_with)
+
+        label_with, reason_with = predict_with_stopwords(text_with)
 
         st.subheader("Text")
         st.write(text_with)
 
-        tokens_with = tokenize_text(text_with)
-
         st.subheader("Tokenized Words")
         st.write(tokens_with)
 
-        label_with, reason_with = predict_with_stopwords(text_with)
-
         st.subheader("Prediction")
-        st.write(label_with)
+        st.success(label_with)
 
         st.subheader("Reason")
-        st.write(reason_with)
+        st.info(reason_with)
 
         # -----------------------------
         # WITHOUT STOPWORDS
         # -----------------------------
-        st.header("WITHOUT STOPWORDS")
+        st.header("🔹 Without Stopwords")
 
         filtered_tokens = remove_stopwords(user_text)
-
         text_without = " ".join(filtered_tokens)
+
+        label_without, reason_without = predict_without_stopwords(text_without)
 
         st.subheader("Text")
         st.write(text_without)
@@ -129,19 +118,14 @@ if st.button("Analyze Text"):
         st.subheader("Tokenized Words")
         st.write(filtered_tokens)
 
-        label_without, reason_without = predict_without_stopwords(text_without)
-
         st.subheader("Prediction")
-        st.write(label_without)
+        st.success(label_without)
 
         st.subheader("Reason")
-        st.write(reason_without)
+        st.info(reason_without)
 
-# -----------------------------
-# Graph: Stopword Impact
-# -----------------------------
         # -----------------------------
-        # Graph: Stopword Impact
+        # GRAPH
         # -----------------------------
         st.markdown("## 📊 Stopword Impact Graph")
 
