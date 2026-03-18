@@ -8,17 +8,26 @@ from nltk.tokenize import word_tokenize
 import matplotlib.pyplot as plt
 
 # -----------------------------
-# FIX NLTK DOWNLOAD ISSUE (FINAL)
+# FINAL NLTK FIX (STREAMLIT CLOUD SAFE)
 # -----------------------------
-def download_nltk():
-    resources = ['punkt', 'punkt_tab', 'stopwords']
-    for resource in resources:
-        try:
-            nltk.data.find(resource)
-        except LookupError:
-            nltk.download(resource)
+NLTK_DATA_PATH = os.path.join(os.getcwd(), "nltk_data")
 
-download_nltk()
+if not os.path.exists(NLTK_DATA_PATH):
+    os.makedirs(NLTK_DATA_PATH)
+
+nltk.data.path.append(NLTK_DATA_PATH)
+
+resources = {
+    "punkt": "tokenizers/punkt",
+    "punkt_tab": "tokenizers/punkt_tab",
+    "stopwords": "corpora/stopwords"
+}
+
+for resource, path in resources.items():
+    try:
+        nltk.data.find(path)
+    except LookupError:
+        nltk.download(resource, download_dir=NLTK_DATA_PATH)
 
 stop_words = set(stopwords.words('english'))
 
@@ -74,7 +83,7 @@ st.write("Compare predictions with and without stopwords.")
 user_text = st.text_area("Enter your message")
 
 # -----------------------------
-# MAIN BUTTON
+# MAIN LOGIC
 # -----------------------------
 if st.button("Analyze Text"):
 
