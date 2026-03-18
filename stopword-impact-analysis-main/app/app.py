@@ -8,17 +8,17 @@ from nltk.tokenize import word_tokenize
 import matplotlib.pyplot as plt
 
 # -----------------------------
-# FIX NLTK DOWNLOAD ISSUE (IMPORTANT)
+# FIX NLTK DOWNLOAD ISSUE (FINAL)
 # -----------------------------
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
+def download_nltk():
+    resources = ['punkt', 'punkt_tab', 'stopwords']
+    for resource in resources:
+        try:
+            nltk.data.find(resource)
+        except LookupError:
+            nltk.download(resource)
 
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords')
+download_nltk()
 
 stop_words = set(stopwords.words('english'))
 
@@ -36,7 +36,6 @@ vectorizer_without = joblib.load(os.path.join(BASE_DIR, "models", "vectorizer_wi
 # -----------------------------
 # FUNCTIONS
 # -----------------------------
-
 def tokenize_text(text):
     return word_tokenize(text)
 
@@ -65,21 +64,24 @@ def predict_without_stopwords(text):
         return "Ham", "Remaining keywords indicate normal communication."
 
 # -----------------------------
-# UI
+# UI SETTINGS
 # -----------------------------
 st.set_page_config(page_title="Stopword Analysis", layout="centered")
 
 st.title("📩 Stopword Removal Impact Analysis")
 st.write("Compare predictions with and without stopwords.")
 
-user_text = st.text_area("Enter your message here")
+user_text = st.text_area("Enter your message")
 
+# -----------------------------
+# MAIN BUTTON
+# -----------------------------
 if st.button("Analyze Text"):
 
     if user_text.strip() == "":
         st.warning("⚠ Please enter a message")
-    else:
 
+    else:
         # -----------------------------
         # ORIGINAL TEXT
         # -----------------------------
